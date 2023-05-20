@@ -95,12 +95,20 @@ impl EGLDisplay {
 }
 
 #[no_mangle]
-pub extern "C" fn eglGetDisplay(_display_id: EGLDisplayID) -> EGLDisplayHandle {
-    println!("eglGetDisplay");
+pub extern "C" fn eglGetDisplay(display_id: EGLDisplayID) -> EGLDisplayHandle {
+    // This driver only supports the value of EGL_DEFAULT_DISPLAY being passed
+    // to in at the moment
+    if display_id.0.is_null() {
+        // Create a new, blank display object
+        let display = EGLDisplay::new();
 
-    let display = EGLDisplay::new();
-
-    EGLDisplayHandle::from_display(display)
+        // Convert the display into a handle object
+        EGLDisplayHandle::from_display(display)
+    } else {
+        // Return null for any other display identifier, as this is not supported
+        // at the moment
+        EGLDisplayHandle(std::ptr::null_mut())
+    }
 }
 
 #[no_mangle]

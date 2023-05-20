@@ -28,6 +28,11 @@ int32_t main(int32_t argument_count, char **arguments)
 {
     // 1. Initialize EGL
     EGLDisplay eglDpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    if (eglDpy == NULL)
+    {
+        printf("Failed to get display\n");
+        return 1;
+    }
 
     EGLint major, minor;
 
