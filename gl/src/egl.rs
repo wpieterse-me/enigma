@@ -1,6 +1,8 @@
-use std::ffi::{c_char, c_void};
+use std::ffi::{c_char, c_void, CStr};
 
 type EGLInteger = u32;
+
+type EGLGeneralFn = unsafe extern "C" fn();
 
 #[repr(u32)]
 pub enum EGLBoolean {
@@ -105,6 +107,29 @@ impl EGLDisplay {
 impl Drop for EGLDisplay {
     fn drop(&mut self) {
         println!("Dropping display");
+    }
+}
+
+#[repr(transparent)]
+pub struct EGLFunctionName(*const c_char);
+
+#[no_mangle]
+pub unsafe extern "C" fn eglGetProcAddress(function_name: EGLFunctionName) -> EGLGeneralFn {
+    if function_name.0.is_null() {
+        std::mem::transmute::<*const (), EGLGeneralFn>(std::ptr::null())
+    } else {
+        let c_string = CStr::from_ptr(function_name.0);
+        let rust_string = match c_string.to_str() {
+            Ok(s) => s,
+            Err(_) => return std::mem::transmute::<*const (), EGLGeneralFn>(std::ptr::null()),
+        };
+
+        let pointer = match rust_string {
+            "eglGetPlatformDisplay" => eglGetPlatformDisplay as *const (),
+            _ => std::ptr::null(),
+        };
+
+        std::mem::transmute::<*const (), EGLGeneralFn>(pointer)
     }
 }
 
@@ -407,9 +432,4 @@ pub extern "C" fn eglCopyBuffers(
     _target: EGLNativePixelMap,
 ) -> EGLBoolean {
     EGLBoolean::False
-}
-
-#[no_mangle]
-pub extern "C" fn eglGetProcAddress(_procedure: *const c_char) -> *const c_void {
-    std::ptr::null()
 }
