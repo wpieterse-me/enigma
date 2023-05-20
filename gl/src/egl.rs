@@ -27,10 +27,17 @@ pub enum EGLErrorCode {
 }
 
 #[repr(transparent)]
-pub struct EGLDisplayID(*mut c_char);
+pub struct EGLDisplayID(*mut c_void);
 
 #[repr(transparent)]
-pub struct EGLQueryString(*const c_char);
+pub struct EGLQueryStringResponse(*const c_char);
+
+#[repr(i32)]
+pub enum EGLQueryStringRequest {
+    Vendor = 0x3053,
+    Version = 0x3054,
+    Extensions = 0x3055,
+}
 
 #[repr(transparent)]
 pub struct EGLDisplay(*mut c_void);
@@ -78,8 +85,11 @@ pub extern "C" fn eglTerminate(_display: EGLDisplay) -> EGLBoolean {
 }
 
 #[no_mangle]
-pub extern "C" fn eglQueryString(_display: EGLDisplay, _name: EGLInteger) -> EGLQueryString {
-    EGLQueryString(std::ptr::null())
+pub extern "C" fn eglQueryString(
+    _display: EGLDisplay,
+    _name: EGLQueryStringRequest,
+) -> EGLQueryStringResponse {
+    EGLQueryStringResponse(std::ptr::null())
 }
 
 #[no_mangle]
