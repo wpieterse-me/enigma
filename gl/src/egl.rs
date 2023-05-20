@@ -109,6 +109,15 @@ impl Drop for EGLDisplay {
 }
 
 #[no_mangle]
+pub extern "C" fn eglGetPlatformDisplay(
+    _platform: i32,
+    _native_display: *const c_void,
+    _attribute_list: *const i32,
+) -> EGLDisplayHandle {
+    EGLDisplayHandle(std::ptr::null_mut())
+}
+
+#[no_mangle]
 pub extern "C" fn eglGetDisplay(display_id: EGLDisplayID) -> EGLDisplayHandle {
     // This driver only supports the value of EGL_DEFAULT_DISPLAY being passed
     // to in at the moment
