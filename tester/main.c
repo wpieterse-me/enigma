@@ -34,9 +34,12 @@ int32_t main(int32_t argument_count, char **arguments)
         return 1;
     }
 
-    EGLint major, minor;
+    EGLint major = 0;
+    EGLint minor = 0;
 
     eglInitialize(eglDpy, &major, &minor);
+
+    printf("Version %d.%d\n", major, minor);
 
     // 2. Select an appropriate configuration
     EGLint numConfigs;
@@ -60,6 +63,8 @@ int32_t main(int32_t argument_count, char **arguments)
 
     // 6. Terminate EGL when finished
     eglTerminate(eglDpy);
+
+    printf("\n!!! DONE !!!\n");
 
     return 0;
 }

@@ -74,6 +74,12 @@ impl EGLDisplayHandle {
         ptr.as_mut().unwrap()
     }
 
+    pub unsafe fn into_display(self) -> Box<EGLDisplay> {
+        let ptr = self.0 as *mut EGLDisplay;
+
+        Box::from_raw(ptr)
+    }
+
     pub fn from_display(display: EGLDisplay) -> Self {
         let reference = Box::leak(Box::new(display));
         let ptr = reference as *mut EGLDisplay;
@@ -83,14 +89,18 @@ impl EGLDisplayHandle {
 }
 
 pub struct EGLDisplay {
-    bar: String,
+    initialized: bool,
 }
 
 impl EGLDisplay {
     pub fn new() -> EGLDisplay {
-        EGLDisplay {
-            bar: "dooda".to_string(),
-        }
+        EGLDisplay { initialized: false }
+    }
+}
+
+impl Drop for EGLDisplay {
+    fn drop(&mut self) {
+        println!("Dropping display");
     }
 }
 
@@ -116,23 +126,37 @@ pub extern "C" fn eglGetDisplay(display_id: EGLDisplayID) -> EGLDisplayHandle {
 #[no_mangle]
 pub unsafe extern "C" fn eglInitialize(
     display_handle: EGLDisplayHandle,
-    _major_version: *mut EGLInteger,
-    _minor_version: *mut EGLInteger,
+    major_version: *mut EGLInteger,
+    minor_version: *mut EGLInteger,
 ) -> EGLBoolean {
-    println!("eglInitialize");
+    if display_handle.0.is_null() {
+        EGLBoolean::False
+    } else {
+        let display = display_handle.as_display();
 
-    let display = display_handle.as_display();
+        display.initialized = true;
 
-    println!("{}", display.bar);
+        if major_version.is_null() == false {
+            *major_version = 1;
+        }
 
-    EGLBoolean::False
+        if minor_version.is_null() == false {
+            *minor_version = 0;
+        }
+
+        EGLBoolean::True
+    }
 }
 
 #[no_mangle]
-pub extern "C" fn eglTerminate(_display: EGLDisplayHandle) -> EGLBoolean {
-    println!("eglTerminate");
+pub unsafe extern "C" fn eglTerminate(display_handle: EGLDisplayHandle) -> EGLBoolean {
+    if display_handle.0.is_null() {
+        EGLBoolean::False
+    } else {
+        display_handle.into_display();
 
-    EGLBoolean::False
+        EGLBoolean::True
+    }
 }
 
 #[no_mangle]
