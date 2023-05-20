@@ -1,7 +1,12 @@
 use std::ffi::{c_char, c_void};
 
-type EGLBoolean = u32;
 type EGLInteger = u32;
+
+#[repr(u32)]
+pub enum EGLBoolean {
+    False = 0,
+    True = 1,
+}
 
 #[repr(i32)]
 pub enum EGLErrorCode {
@@ -64,12 +69,12 @@ pub extern "C" fn eglInitialize(
     _major_version: *mut EGLInteger,
     _minor_version: *mut EGLInteger,
 ) -> EGLBoolean {
-    0
+    EGLBoolean::False
 }
 
 #[no_mangle]
 pub extern "C" fn eglTerminate(_display: EGLDisplay) -> EGLBoolean {
-    0
+    EGLBoolean::False
 }
 
 #[no_mangle]
@@ -84,7 +89,7 @@ pub extern "C" fn eglGetConfigs(
     _configuration_size: EGLInteger,
     _configuration_count: *mut EGLInteger,
 ) -> EGLBoolean {
-    0
+    EGLBoolean::False
 }
 
 #[no_mangle]
@@ -95,7 +100,7 @@ pub extern "C" fn eglChooseConfig(
     _configuration_size: EGLInteger,
     _configuration_count: *mut EGLInteger,
 ) -> EGLBoolean {
-    0
+    EGLBoolean::False
 }
 
 #[no_mangle]
@@ -105,7 +110,7 @@ pub extern "C" fn eglGetConfigAttrib(
     _attribute: EGLInteger,
     _value: *mut EGLInteger,
 ) -> EGLBoolean {
-    0
+    EGLBoolean::False
 }
 
 #[no_mangle]
@@ -139,7 +144,7 @@ pub extern "C" fn eglCreatePixmapSurface(
 
 #[no_mangle]
 pub extern "C" fn eglDestroySurface(_display: EGLDisplay, _surface: EGLSurface) -> EGLBoolean {
-    0
+    EGLBoolean::False
 }
 
 #[no_mangle]
@@ -149,12 +154,12 @@ pub extern "C" fn eglQuerySurface(
     _attribute: EGLInteger,
     _value: *mut EGLInteger,
 ) -> EGLBoolean {
-    0
+    EGLBoolean::False
 }
 
 #[no_mangle]
 pub extern "C" fn eglBindAPI(_api: u32) -> EGLBoolean {
-    0
+    EGLBoolean::False
 }
 
 #[no_mangle]
@@ -164,12 +169,12 @@ pub extern "C" fn eglQueryAPI() -> u32 {
 
 #[no_mangle]
 pub extern "C" fn eglWaitClient() -> EGLBoolean {
-    0
+    EGLBoolean::False
 }
 
 #[no_mangle]
 pub extern "C" fn eglReleaseThread() -> EGLBoolean {
-    0
+    EGLBoolean::False
 }
 
 #[no_mangle]
@@ -190,7 +195,7 @@ pub extern "C" fn eglSurfaceAttrib(
     _attribute: EGLInteger,
     _value: EGLInteger,
 ) -> EGLBoolean {
-    0
+    EGLBoolean::False
 }
 
 #[no_mangle]
@@ -199,7 +204,7 @@ pub extern "C" fn eglBindTexImage(
     _surface: EGLSurface,
     _buffer: EGLInteger,
 ) -> EGLBoolean {
-    0
+    EGLBoolean::False
 }
 
 #[no_mangle]
@@ -208,12 +213,12 @@ pub extern "C" fn eglReleaseTexImage(
     _surface: EGLSurface,
     _buffer: EGLInteger,
 ) -> EGLBoolean {
-    0
+    EGLBoolean::False
 }
 
 #[no_mangle]
 pub extern "C" fn eglSwapInterval(_display: EGLDisplay, _interval: EGLInteger) -> EGLBoolean {
-    0
+    EGLBoolean::False
 }
 
 #[no_mangle]
@@ -228,7 +233,7 @@ pub extern "C" fn eglCreateContext(
 
 #[no_mangle]
 pub extern "C" fn eglDestroyContext(_display: EGLDisplay, _context: EGLContext) -> EGLBoolean {
-    0
+    EGLBoolean::False
 }
 
 #[no_mangle]
@@ -238,7 +243,7 @@ pub extern "C" fn eglMakeCurrent(
     _read_surface: EGLSurface,
     _context: EGLContext,
 ) -> EGLBoolean {
-    0
+    EGLBoolean::False
 }
 
 #[no_mangle]
@@ -263,22 +268,22 @@ pub extern "C" fn eglQueryContext(
     _attribute: EGLInteger,
     _value: *mut EGLInteger,
 ) -> EGLBoolean {
-    0
+    EGLBoolean::False
 }
 
 #[no_mangle]
 pub extern "C" fn eglWaitGL() -> EGLBoolean {
-    0
+    EGLBoolean::False
 }
 
 #[no_mangle]
 pub extern "C" fn eglWaitNative(_engine: EGLInteger) -> EGLBoolean {
-    0
+    EGLBoolean::False
 }
 
 #[no_mangle]
 pub extern "C" fn eglSwapBuffers(_display: EGLDisplay, _surface: EGLSurface) -> EGLBoolean {
-    0
+    EGLBoolean::False
 }
 
 #[no_mangle]
@@ -287,7 +292,7 @@ pub extern "C" fn eglCopyBuffers(
     _surface: EGLSurface,
     _target: EGLNativePixelMap,
 ) -> EGLBoolean {
-    0
+    EGLBoolean::False
 }
 
 #[no_mangle]
