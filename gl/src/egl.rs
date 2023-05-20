@@ -106,7 +106,9 @@ pub extern "C" fn eglGetDisplay(display_id: EGLDisplayID) -> EGLDisplayHandle {
         EGLDisplayHandle::from_display(display)
     } else {
         // Return null for any other display identifier, as this is not supported
-        // at the moment
+        // at the moment. The null result will be interpreted as `EGL_NO_DISPLAY`
+        // by client applications, indicating that it's not supported. No error
+        // needs to be set in this case per the spec.
         EGLDisplayHandle(std::ptr::null_mut())
     }
 }
