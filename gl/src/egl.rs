@@ -1,3 +1,5 @@
+use std::ffi::c_void;
+
 #[repr(i32)]
 pub enum ErrorCode {
     /// The operation has succeeded
@@ -42,6 +44,18 @@ pub enum ErrorCode {
     /// An EGLSurface argument does not name a valid surface (window, pbuffer, or pixmap) configured for OpenGL ES rendering
     BadSurface = 0x300D,
 }
+
+#[repr(transparent)]
+pub struct Display(*mut c_void);
+
+#[repr(transparent)]
+pub struct Configuration(*mut c_void);
+
+#[repr(transparent)]
+pub struct Context(*mut c_void);
+
+#[repr(transparent)]
+pub struct Surface(*mut c_void);
 
 #[no_mangle]
 pub extern "C" fn eglGetError() -> ErrorCode {
