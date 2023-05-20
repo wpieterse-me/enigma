@@ -68,12 +68,16 @@ pub extern "C" fn eglGetError() -> EGLErrorCode {
 }
 
 impl EGLDisplayHandle {
+    /// # Panics
+    /// Panics if `self.0` == null.
     pub unsafe fn as_display(&self) -> &'static mut EGLDisplay {
         let ptr = self.0 as *mut EGLDisplay;
 
         ptr.as_mut().unwrap()
     }
 
+    /// # Safety
+    /// `self.0` != null.
     pub unsafe fn into_display(self) -> Box<EGLDisplay> {
         let ptr = self.0 as *mut EGLDisplay;
 
