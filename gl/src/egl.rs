@@ -62,11 +62,15 @@ pub struct EGLNativePixelMap(*mut c_void);
 
 #[no_mangle]
 pub extern "C" fn eglGetError() -> EGLErrorCode {
+    println!("eglGetError");
+
     EGLErrorCode::Success
 }
 
 #[no_mangle]
 pub extern "C" fn eglGetDisplay(_display_id: EGLDisplayID) -> EGLDisplay {
+    println!("eglGetDisplay");
+
     EGLDisplay(std::ptr::null_mut())
 }
 
@@ -76,11 +80,15 @@ pub extern "C" fn eglInitialize(
     _major_version: *mut EGLInteger,
     _minor_version: *mut EGLInteger,
 ) -> EGLBoolean {
+    println!("eglInitialize");
+
     EGLBoolean::False
 }
 
 #[no_mangle]
 pub extern "C" fn eglTerminate(_display: EGLDisplay) -> EGLBoolean {
+    println!("eglTerminate");
+
     EGLBoolean::False
 }
 
@@ -110,6 +118,8 @@ pub extern "C" fn eglChooseConfig(
     _configuration_size: EGLInteger,
     _configuration_count: *mut EGLInteger,
 ) -> EGLBoolean {
+    println!("eglChooseConfig");
+
     EGLBoolean::False
 }
 
@@ -139,6 +149,8 @@ pub extern "C" fn eglCreatePbufferSurface(
     _configuration: EGLConfiguration,
     _attribute_list: *const EGLInteger,
 ) -> EGLSurface {
+    println!("eglCreatePbufferSurface");
+
     EGLSurface(std::ptr::null_mut())
 }
 
@@ -169,6 +181,8 @@ pub extern "C" fn eglQuerySurface(
 
 #[no_mangle]
 pub extern "C" fn eglBindAPI(_api: u32) -> EGLBoolean {
+    println!("eglBindAPI");
+
     EGLBoolean::False
 }
 
@@ -238,6 +252,8 @@ pub extern "C" fn eglCreateContext(
     _share_context: EGLContext,
     _attribute_list: *const EGLInteger,
 ) -> EGLContext {
+    println!("eglCreateContext");
+
     EGLContext(std::ptr::null_mut())
 }
 
@@ -253,6 +269,8 @@ pub extern "C" fn eglMakeCurrent(
     _read_surface: EGLSurface,
     _context: EGLContext,
 ) -> EGLBoolean {
+    println!("eglMakeCurrent");
+
     EGLBoolean::False
 }
 
