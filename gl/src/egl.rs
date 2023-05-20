@@ -40,7 +40,7 @@ pub enum EGLQueryStringRequest {
 }
 
 #[repr(transparent)]
-pub struct EGLDisplay(*mut c_void);
+pub struct EGLDisplayHandle(*mut c_void);
 
 #[repr(transparent)]
 pub struct EGLConfiguration(*mut c_void);
@@ -67,26 +67,59 @@ pub extern "C" fn eglGetError() -> EGLErrorCode {
     EGLErrorCode::Success
 }
 
-#[no_mangle]
-pub extern "C" fn eglGetDisplay(_display_id: EGLDisplayID) -> EGLDisplay {
-    println!("eglGetDisplay");
+impl EGLDisplayHandle {
+    pub unsafe fn as_display(&self) -> &'static mut EGLDisplay {
+        let ptr = self.0 as *mut EGLDisplay;
 
-    EGLDisplay(std::ptr::null_mut())
+        ptr.as_mut().unwrap()
+    }
+
+    pub fn from_display(display: EGLDisplay) -> Self {
+        let reference = Box::leak(Box::new(display));
+        let ptr = reference as *mut EGLDisplay;
+
+        Self(ptr as _)
+    }
+}
+
+pub struct EGLDisplay {
+    bar: String,
+}
+
+impl EGLDisplay {
+    pub fn new() -> EGLDisplay {
+        EGLDisplay {
+            bar: "dooda".to_string(),
+        }
+    }
 }
 
 #[no_mangle]
-pub extern "C" fn eglInitialize(
-    _display: EGLDisplay,
+pub extern "C" fn eglGetDisplay(_display_id: EGLDisplayID) -> EGLDisplayHandle {
+    println!("eglGetDisplay");
+
+    let display = EGLDisplay::new();
+
+    EGLDisplayHandle::from_display(display)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn eglInitialize(
+    display_handle: EGLDisplayHandle,
     _major_version: *mut EGLInteger,
     _minor_version: *mut EGLInteger,
 ) -> EGLBoolean {
     println!("eglInitialize");
 
+    let display = display_handle.as_display();
+
+    println!("{}", display.bar);
+
     EGLBoolean::False
 }
 
 #[no_mangle]
-pub extern "C" fn eglTerminate(_display: EGLDisplay) -> EGLBoolean {
+pub extern "C" fn eglTerminate(_display: EGLDisplayHandle) -> EGLBoolean {
     println!("eglTerminate");
 
     EGLBoolean::False
@@ -94,7 +127,7 @@ pub extern "C" fn eglTerminate(_display: EGLDisplay) -> EGLBoolean {
 
 #[no_mangle]
 pub extern "C" fn eglQueryString(
-    _display: EGLDisplay,
+    _display: EGLDisplayHandle,
     _name: EGLQueryStringRequest,
 ) -> EGLQueryStringResponse {
     EGLQueryStringResponse(std::ptr::null())
@@ -102,7 +135,7 @@ pub extern "C" fn eglQueryString(
 
 #[no_mangle]
 pub extern "C" fn eglGetConfigs(
-    _display: EGLDisplay,
+    _display: EGLDisplayHandle,
     _configurations: *mut EGLConfiguration,
     _configuration_size: EGLInteger,
     _configuration_count: *mut EGLInteger,
@@ -112,7 +145,7 @@ pub extern "C" fn eglGetConfigs(
 
 #[no_mangle]
 pub extern "C" fn eglChooseConfig(
-    _display: EGLDisplay,
+    _display: EGLDisplayHandle,
     _attribute_list: *const EGLInteger,
     _configurations: *const EGLConfiguration,
     _configuration_size: EGLInteger,
@@ -125,7 +158,7 @@ pub extern "C" fn eglChooseConfig(
 
 #[no_mangle]
 pub extern "C" fn eglGetConfigAttrib(
-    _display: EGLDisplay,
+    _display: EGLDisplayHandle,
     _configuration: EGLConfiguration,
     _attribute: EGLInteger,
     _value: *mut EGLInteger,
@@ -135,7 +168,7 @@ pub extern "C" fn eglGetConfigAttrib(
 
 #[no_mangle]
 pub extern "C" fn eglCreateWindowSurface(
-    _display: EGLDisplay,
+    _display: EGLDisplayHandle,
     _configuration: EGLConfiguration,
     _window: EGLNativeWindow,
     _attribute_list: *const EGLInteger,
@@ -145,7 +178,7 @@ pub extern "C" fn eglCreateWindowSurface(
 
 #[no_mangle]
 pub extern "C" fn eglCreatePbufferSurface(
-    _display: EGLDisplay,
+    _display: EGLDisplayHandle,
     _configuration: EGLConfiguration,
     _attribute_list: *const EGLInteger,
 ) -> EGLSurface {
@@ -156,7 +189,7 @@ pub extern "C" fn eglCreatePbufferSurface(
 
 #[no_mangle]
 pub extern "C" fn eglCreatePixmapSurface(
-    _display: EGLDisplay,
+    _display: EGLDisplayHandle,
     _configuration: EGLConfiguration,
     _pixel_map: EGLNativePixelMap,
     _attribute_list: *const EGLInteger,
@@ -165,13 +198,16 @@ pub extern "C" fn eglCreatePixmapSurface(
 }
 
 #[no_mangle]
-pub extern "C" fn eglDestroySurface(_display: EGLDisplay, _surface: EGLSurface) -> EGLBoolean {
+pub extern "C" fn eglDestroySurface(
+    _display: EGLDisplayHandle,
+    _surface: EGLSurface,
+) -> EGLBoolean {
     EGLBoolean::False
 }
 
 #[no_mangle]
 pub extern "C" fn eglQuerySurface(
-    _display: EGLDisplay,
+    _display: EGLDisplayHandle,
     _surface: EGLSurface,
     _attribute: EGLInteger,
     _value: *mut EGLInteger,
@@ -203,7 +239,7 @@ pub extern "C" fn eglReleaseThread() -> EGLBoolean {
 
 #[no_mangle]
 pub extern "C" fn eglCreatePbufferFromClientBuffer(
-    _display: EGLDisplay,
+    _display: EGLDisplayHandle,
     _buffer_type: u32,
     _buffer: EGLClientBuffer,
     _configuration: EGLConfiguration,
@@ -214,7 +250,7 @@ pub extern "C" fn eglCreatePbufferFromClientBuffer(
 
 #[no_mangle]
 pub extern "C" fn eglSurfaceAttrib(
-    _display: EGLDisplay,
+    _display: EGLDisplayHandle,
     _surface: EGLSurface,
     _attribute: EGLInteger,
     _value: EGLInteger,
@@ -224,7 +260,7 @@ pub extern "C" fn eglSurfaceAttrib(
 
 #[no_mangle]
 pub extern "C" fn eglBindTexImage(
-    _display: EGLDisplay,
+    _display: EGLDisplayHandle,
     _surface: EGLSurface,
     _buffer: EGLInteger,
 ) -> EGLBoolean {
@@ -233,7 +269,7 @@ pub extern "C" fn eglBindTexImage(
 
 #[no_mangle]
 pub extern "C" fn eglReleaseTexImage(
-    _display: EGLDisplay,
+    _display: EGLDisplayHandle,
     _surface: EGLSurface,
     _buffer: EGLInteger,
 ) -> EGLBoolean {
@@ -241,13 +277,13 @@ pub extern "C" fn eglReleaseTexImage(
 }
 
 #[no_mangle]
-pub extern "C" fn eglSwapInterval(_display: EGLDisplay, _interval: EGLInteger) -> EGLBoolean {
+pub extern "C" fn eglSwapInterval(_display: EGLDisplayHandle, _interval: EGLInteger) -> EGLBoolean {
     EGLBoolean::False
 }
 
 #[no_mangle]
 pub extern "C" fn eglCreateContext(
-    _display: EGLDisplay,
+    _display: EGLDisplayHandle,
     _configuration: EGLConfiguration,
     _share_context: EGLContext,
     _attribute_list: *const EGLInteger,
@@ -258,13 +294,16 @@ pub extern "C" fn eglCreateContext(
 }
 
 #[no_mangle]
-pub extern "C" fn eglDestroyContext(_display: EGLDisplay, _context: EGLContext) -> EGLBoolean {
+pub extern "C" fn eglDestroyContext(
+    _display: EGLDisplayHandle,
+    _context: EGLContext,
+) -> EGLBoolean {
     EGLBoolean::False
 }
 
 #[no_mangle]
 pub extern "C" fn eglMakeCurrent(
-    _display: EGLDisplay,
+    _display: EGLDisplayHandle,
     _write_surface: EGLSurface,
     _read_surface: EGLSurface,
     _context: EGLContext,
@@ -285,13 +324,13 @@ pub extern "C" fn eglGetCurrentSurface(_read_draw: EGLInteger) -> EGLSurface {
 }
 
 #[no_mangle]
-pub extern "C" fn eglGetCurrentDisplay() -> EGLDisplay {
-    EGLDisplay(std::ptr::null_mut())
+pub extern "C" fn eglGetCurrentDisplay() -> EGLDisplayHandle {
+    EGLDisplayHandle(std::ptr::null_mut())
 }
 
 #[no_mangle]
 pub extern "C" fn eglQueryContext(
-    _display: EGLDisplay,
+    _display: EGLDisplayHandle,
     _context: EGLContext,
     _attribute: EGLInteger,
     _value: *mut EGLInteger,
@@ -310,13 +349,13 @@ pub extern "C" fn eglWaitNative(_engine: EGLInteger) -> EGLBoolean {
 }
 
 #[no_mangle]
-pub extern "C" fn eglSwapBuffers(_display: EGLDisplay, _surface: EGLSurface) -> EGLBoolean {
+pub extern "C" fn eglSwapBuffers(_display: EGLDisplayHandle, _surface: EGLSurface) -> EGLBoolean {
     EGLBoolean::False
 }
 
 #[no_mangle]
 pub extern "C" fn eglCopyBuffers(
-    _display: EGLDisplay,
+    _display: EGLDisplayHandle,
     _surface: EGLSurface,
     _target: EGLNativePixelMap,
 ) -> EGLBoolean {
