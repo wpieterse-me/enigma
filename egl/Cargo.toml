@@ -1,7 +1,0 @@
-[package]
-name = "egl"
-version = "0.0.0"
-edition = "2021"
-
-[lib]
-crate-type = ["cdylib"]
