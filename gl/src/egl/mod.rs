@@ -148,28 +148,11 @@ pub extern "C" fn eglGetPlatformDisplay(
 
 #[no_mangle]
 pub extern "C" fn eglGetDisplay(display_id: EGLDisplayID) -> EGLDisplayHandle {
-    post_debug_msg(
-        EGLErrorCode::Success,
-        "hello-command\0",
-        EGLDebugMessageTypeKHR::Information,
-        EGLLabelKHR(std::ptr::null_mut()),
-        EGLLabelKHR(std::ptr::null_mut()),
-        "hello-message\0",
-    );
-
-    // This driver only supports the value of EGL_DEFAULT_DISPLAY being passed
-    // to in at the moment
     if display_id.0.is_null() {
-        // Create a new, blank display object
         let display = EGLDisplay::new();
 
-        // Convert the display into a handle object
         EGLDisplayHandle::from_display(display)
     } else {
-        // Return null for any other display identifier, as this is not supported
-        // at the moment. The null result will be interpreted as `EGL_NO_DISPLAY`
-        // by client applications, indicating that it's not supported. No error
-        // needs to be set in this case per the spec.
         EGLDisplayHandle(std::ptr::null_mut())
     }
 }

@@ -39,9 +39,9 @@ struct Debug {
 static DEBUG_ONCE: Once = Once::new();
 static mut DEBUG: Debug = Debug {
     callback: None,
-    enable_critical_messages: false,
-    enable_error_messages: false,
-    enable_warning_messages: false,
+    enable_critical_messages: true,
+    enable_error_messages: true,
+    enable_warning_messages: true,
     enable_information_messages: false,
 };
 
@@ -71,6 +71,29 @@ pub fn post_debug_msg(
 ) {
     Debug::ensure_init();
 
+    match message_type {
+        EGLDebugMessageTypeKHR::Critical => {
+            if Debug::get().enable_critical_messages == false {
+                return;
+            }
+        }
+        EGLDebugMessageTypeKHR::Error => {
+            if Debug::get().enable_error_messages == false {
+                return;
+            }
+        }
+        EGLDebugMessageTypeKHR::Warning => {
+            if Debug::get().enable_warning_messages == false {
+                return;
+            }
+        }
+        EGLDebugMessageTypeKHR::Information => {
+            if Debug::get().enable_information_messages == false {
+                return;
+            }
+        }
+    }
+
     match Debug::get().callback {
         Some(callback) => callback(
             error_code,
@@ -88,10 +111,10 @@ pub fn post_debug_msg(
 pub extern "C" fn eglDebugMessageControlKHR(
     callback: Option<EGLDebugMessageCallbackKHRFn>,
     _attribute_list: *const i32,
-) -> i32 {
+) -> EGLErrorCode {
     Debug::ensure_init();
 
     Debug::get_mut().callback = callback;
 
-    0
+    EGLErrorCode::Success
 }
