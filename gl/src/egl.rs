@@ -1,7 +1,6 @@
 use std::{
     ffi::{c_char, c_void, CStr},
-    mem::MaybeUninit,
-    sync::{Mutex, Once},
+    sync::Once,
 };
 
 type EGLInteger = u32;
@@ -127,24 +126,24 @@ struct GlobalState {
     debug_callback: Option<EGLDebugCallbackFn>,
 }
 
+static GLOBAL_STATE_ONCE: Once = Once::new();
+static mut GLOBAL_STATE: GlobalState = GlobalState {
+    debug_callback: None,
+};
+
 impl GlobalState {
-    fn new() -> Self {
-        Self {
-            debug_callback: None,
-        }
+    fn initialize(&mut self) {}
+
+    fn get() -> &'static Self {
+        unsafe { &GLOBAL_STATE }
     }
-}
 
-fn ensure_global_state() -> &'static Mutex<GlobalState> {
-    static mut GLOBAL_STATE: MaybeUninit<Mutex<GlobalState>> = MaybeUninit::uninit();
-    static GLOBAL_STATE_ONCE: Once = Once::new();
+    fn get_mut() -> &'static mut Self {
+        unsafe { &mut GLOBAL_STATE }
+    }
 
-    unsafe {
-        GLOBAL_STATE_ONCE.call_once(|| {
-            GLOBAL_STATE.write(Mutex::new(GlobalState::new()));
-        });
-
-        GLOBAL_STATE.assume_init_ref()
+    fn init_once() {
+        GLOBAL_STATE_ONCE.call_once(|| unsafe { GLOBAL_STATE.initialize() });
     }
 }
 
@@ -153,7 +152,9 @@ pub unsafe extern "C" fn eglDebugMessageControlKHR(
     callback: EGLDebugCallbackFn,
     _attribute_list: *const i32,
 ) -> i32 {
-    ensure_global_state().lock().unwrap().debug_callback = Some(callback);
+    GlobalState::init_once();
+
+    GlobalState::get_mut().debug_callback = Some(callback);
 
     0
 }
@@ -192,7 +193,7 @@ pub extern "C" fn eglGetPlatformDisplay(
 
 #[no_mangle]
 pub extern "C" fn eglGetDisplay(display_id: EGLDisplayID) -> EGLDisplayHandle {
-    match ensure_global_state().lock().unwrap().debug_callback {
+    match GlobalState::get().debug_callback {
         Some(callback) => callback(
             0,
             "hello - command\0".as_ptr() as *const c_char,

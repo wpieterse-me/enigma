@@ -1,4 +1,4 @@
-use std::ffi::{c_void, CStr, c_char};
+use std::ffi::{c_char, c_void, CStr};
 
 type EGLDebugCallbackFn = extern "C" fn(
     error: u32,
@@ -23,11 +23,11 @@ extern "C" {
 
 #[no_mangle]
 extern "C" fn test_callback(
-    error: u32,
+    _error: u32,
     command: *const i8,
-    message_type: i32,
-    thread_label: i32,
-    object_label: i32,
+    _message_type: i32,
+    _thread_label: i32,
+    _object_label: i32,
     message: *const i8,
 ) {
     println!(
