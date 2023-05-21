@@ -1,7 +1,8 @@
-use std::{
-    ffi::{c_char, c_void, CStr},
-    sync::Once,
-};
+use std::ffi::{c_char, c_void, CStr};
+
+use self::extensions::egl_khr_debug::post_debug_msg;
+
+pub mod extensions;
 
 type EGLInteger = u32;
 
@@ -113,52 +114,6 @@ impl Drop for EGLDisplay {
     }
 }
 
-type EGLDebugCallbackFn = extern "C" fn(
-    error: u32,
-    command: *const c_char,
-    message_type: i32,
-    thread_label: i32,
-    object_label: i32,
-    message: *const c_char,
-);
-
-struct GlobalState {
-    debug_callback: Option<EGLDebugCallbackFn>,
-}
-
-static GLOBAL_STATE_ONCE: Once = Once::new();
-static mut GLOBAL_STATE: GlobalState = GlobalState {
-    debug_callback: None,
-};
-
-impl GlobalState {
-    fn initialize(&mut self) {}
-
-    fn get() -> &'static Self {
-        unsafe { &GLOBAL_STATE }
-    }
-
-    fn get_mut() -> &'static mut Self {
-        unsafe { &mut GLOBAL_STATE }
-    }
-
-    fn init_once() {
-        GLOBAL_STATE_ONCE.call_once(|| unsafe { GLOBAL_STATE.initialize() });
-    }
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn eglDebugMessageControlKHR(
-    callback: EGLDebugCallbackFn,
-    _attribute_list: *const i32,
-) -> i32 {
-    GlobalState::init_once();
-
-    GlobalState::get_mut().debug_callback = Some(callback);
-
-    0
-}
-
 #[repr(transparent)]
 pub struct EGLFunctionName(*const c_char);
 
@@ -193,17 +148,7 @@ pub extern "C" fn eglGetPlatformDisplay(
 
 #[no_mangle]
 pub extern "C" fn eglGetDisplay(display_id: EGLDisplayID) -> EGLDisplayHandle {
-    match GlobalState::get().debug_callback {
-        Some(callback) => callback(
-            0,
-            "hello - command\0".as_ptr() as *const c_char,
-            0,
-            0,
-            0,
-            "hello - message\0".as_ptr() as *const c_char,
-        ),
-        None => {}
-    }
+    post_debug_msg("hello-command\0", "hello-message\0");
 
     // This driver only supports the value of EGL_DEFAULT_DISPLAY being passed
     // to in at the moment
