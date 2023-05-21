@@ -1,21 +1,48 @@
-use std::{ffi::c_char, sync::Once};
+use std::{
+    ffi::{c_char, c_void},
+    sync::Once,
+};
 
-type EGLDebugCallbackFn = extern "C" fn(
-    error: u32,
+use crate::egl::EGLErrorCode;
+
+#[repr(transparent)]
+pub struct EGLObjectKHR(pub *mut c_void);
+
+#[repr(transparent)]
+pub struct EGLLabelKHR(pub *mut c_void);
+
+#[repr(i32)]
+pub enum EGLDebugMessageTypeKHR {
+    Critical = 0x33B9,
+    Error = 0x33BA,
+    Warning = 0x33BB,
+    Information = 0x33BC,
+}
+
+type EGLDebugMessageCallbackKHRFn = extern "C" fn(
+    error: EGLErrorCode,
     command: *const c_char,
-    message_type: i32,
-    thread_label: i32,
-    object_label: i32,
+    message_type: EGLDebugMessageTypeKHR,
+    thread_label: EGLLabelKHR,
+    object_label: EGLLabelKHR,
     message: *const c_char,
 );
 
 struct Debug {
-    debug_callback: Option<EGLDebugCallbackFn>,
+    callback: Option<EGLDebugMessageCallbackKHRFn>,
+    enable_critical_messages: bool,
+    enable_error_messages: bool,
+    enable_warning_messages: bool,
+    enable_information_messages: bool,
 }
 
 static DEBUG_ONCE: Once = Once::new();
 static mut DEBUG: Debug = Debug {
-    debug_callback: None,
+    callback: None,
+    enable_critical_messages: false,
+    enable_error_messages: false,
+    enable_warning_messages: false,
+    enable_information_messages: false,
 };
 
 impl Debug {
@@ -34,16 +61,23 @@ impl Debug {
     }
 }
 
-pub fn post_debug_msg(command: &str, message: &str) {
+pub fn post_debug_msg(
+    error_code: EGLErrorCode,
+    command: &str,
+    message_type: EGLDebugMessageTypeKHR,
+    thread_label: EGLLabelKHR,
+    object_label: EGLLabelKHR,
+    message: &str,
+) {
     Debug::ensure_init();
 
-    match Debug::get().debug_callback {
+    match Debug::get().callback {
         Some(callback) => callback(
-            0,
+            error_code,
             command.as_ptr() as *const c_char,
-            0,
-            0,
-            0,
+            message_type,
+            thread_label,
+            object_label,
             message.as_ptr() as *const c_char,
         ),
         None => {}
@@ -52,12 +86,12 @@ pub fn post_debug_msg(command: &str, message: &str) {
 
 #[no_mangle]
 pub extern "C" fn eglDebugMessageControlKHR(
-    callback: EGLDebugCallbackFn,
+    callback: Option<EGLDebugMessageCallbackKHRFn>,
     _attribute_list: *const i32,
 ) -> i32 {
     Debug::ensure_init();
 
-    Debug::get_mut().debug_callback = Some(callback);
+    Debug::get_mut().callback = callback;
 
     0
 }

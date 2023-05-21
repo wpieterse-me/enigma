@@ -23,15 +23,17 @@ extern "C" {
 
 #[no_mangle]
 extern "C" fn test_callback(
-    _error: u32,
+    error: u32,
     command: *const i8,
-    _message_type: i32,
+    message_type: i32,
     _thread_label: i32,
     _object_label: i32,
     message: *const i8,
 ) {
     println!(
-        "CALLBACK : {} - {}",
+        "CALLBACK : 0x{:04X} - 0x{:04X} - {} - {}",
+        error,
+        message_type,
         unsafe { CStr::from_ptr(command).to_str().unwrap() },
         unsafe { CStr::from_ptr(message).to_str().unwrap() }
     );

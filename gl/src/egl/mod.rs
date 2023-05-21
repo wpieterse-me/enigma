@@ -1,6 +1,6 @@
 use std::ffi::{c_char, c_void, CStr};
 
-use self::extensions::egl_khr_debug::post_debug_msg;
+use self::extensions::egl_khr_debug::{post_debug_msg, EGLLabelKHR, EGLDebugMessageTypeKHR};
 
 pub mod extensions;
 
@@ -148,7 +148,14 @@ pub extern "C" fn eglGetPlatformDisplay(
 
 #[no_mangle]
 pub extern "C" fn eglGetDisplay(display_id: EGLDisplayID) -> EGLDisplayHandle {
-    post_debug_msg("hello-command\0", "hello-message\0");
+    post_debug_msg(
+        EGLErrorCode::Success,
+        "hello-command\0",
+        EGLDebugMessageTypeKHR::Information,
+        EGLLabelKHR(std::ptr::null_mut()),
+        EGLLabelKHR(std::ptr::null_mut()),
+        "hello-message\0",
+    );
 
     // This driver only supports the value of EGL_DEFAULT_DISPLAY being passed
     // to in at the moment
